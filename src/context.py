@@ -8,7 +8,7 @@ DATA.f_cor = DATA.f_cor / 60
 DATA.f_inc = DATA.f_inc / 60
 
 RELEVANT_SUB = np.array([1, 3, 5, 6, 7, 8, 16, 20, 22, 23, 24, 26, 27])
-BLOCKS = np.arange(3)
+# BLOCKS = np.arange(3)
 
 
 def generate_context():
@@ -30,6 +30,7 @@ def generate_context():
         - inc_option: Incorrect option
     """
     sub = RNG.choice(RELEVANT_SUB)
-    block = RNG.choice(BLOCKS)
-    sub_data = DATA.loc[(DATA.id == sub) & (DATA.block == block)]
+    # block = RNG.choice(BLOCKS)
+    # sub_data = DATA.loc[(DATA.id == sub) & (DATA.block == block)]
+    sub_data = DATA.loc[DATA.id == sub]
     return sub_data[['f_cor', 'f_inc', 'cor_option', 'inc_option']].to_numpy()

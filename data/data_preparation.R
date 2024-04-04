@@ -25,7 +25,7 @@ df %<>%
          inc_option = inc_option - 1, 
          pair_type = pair_type - 1)
 
-write_csv(df, "data_fontanesi_prep.csv")
+# write_csv(df, "data_fontanesi_prep.csv")
 
 sumsum <- df %>% 
   group_by(id) %>% 

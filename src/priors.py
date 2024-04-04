@@ -49,10 +49,10 @@ def sample_eta(rng=None):
     """
     if rng is None:
         rng = np.random.default_rng()
-    eta = rng.normal(loc=0, scale=[0.2, 3])
+    eta = rng.normal(loc=0, scale=[0.05, 3])
     return np.abs(eta)
 
-def sample_random_walk(eta, num_steps=80, lower_bounds=(0, 1), upper_bounds=(1, 80), rng=None):
+def sample_random_walk(eta, num_steps=240, lower_bounds=(0, 0), upper_bounds=(1, 80), rng=None):
     """
     Perform a constrained random walk to sample theta parameters over a number of steps.
 
@@ -67,7 +67,7 @@ def sample_random_walk(eta, num_steps=80, lower_bounds=(0, 1), upper_bounds=(1, 
     num_steps : int, optional
         The number of steps in the random walk (default is 80).
     lower_bounds : tuple, optional
-        The lower bounds for the theta parameters (default is (0, 1)).
+        The lower bounds for the theta parameters (default is (0, 0)).
     upper_bounds : tuple, optional
         The upper bounds for the theta parameters (default is (1, 80)).
     rng : np.random.Generator, optional
@@ -85,7 +85,13 @@ def sample_random_walk(eta, num_steps=80, lower_bounds=(0, 1), upper_bounds=(1, 
     theta_t[0] = sample_theta_0(rng=rng)
     z = rng.normal(size=(num_steps - 1, 2))
     for t in range(1, num_steps):
-        theta_t[t] = np.clip(
-            theta_t[t - 1] + eta * z[t - 1], lower_bounds, upper_bounds
-        )
+        if t == 80 or t == 160:
+            theta_t[t, 0] = rng.uniform(theta_t[t - 1, 0], 1)
+            theta_t[t, 1] = np.clip(
+            theta_t[t - 1, 1] + eta[1] * z[t - 1, 1], lower_bounds[1], upper_bounds[1]
+            )
+        else:
+            theta_t[t] = np.clip(
+                theta_t[t - 1] + eta * z[t - 1], lower_bounds, upper_bounds
+            )
     return theta_t.astype(np.float32)

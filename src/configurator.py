@@ -2,10 +2,10 @@ import numpy as np
 from scipy.stats import halfnorm
 from keras.utils import to_categorical
 
-GLOBAL_PRIOR_MEAN = halfnorm(0, [0.2, 3]).mean().round(decimals=2)
-GLOBAL_PRIOR_STD = halfnorm(0, [0.2, 3]).std().round(decimals=2)
-LOCAL_PRIOR_MEAN = np.array([0.5, 19])
-LOCAL_PRIOR_STD = np.array([0.3, 19])
+GLOBAL_PRIOR_MEAN = halfnorm(0, [0.05, 3]).mean().round(decimals=2)
+GLOBAL_PRIOR_STD = halfnorm(0, [0.05, 3]).std().round(decimals=2)
+LOCAL_PRIOR_MEAN = np.array([0.6, 20])
+LOCAL_PRIOR_STD = np.array([0.3, 20])
 
 def configure_input(raw_dict):
     """

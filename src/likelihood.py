@@ -39,6 +39,9 @@ def sample_softmax_rl(theta, context):
     values = np.full(4, 27.5) / 60
     resp = np.zeros(num_steps)
     for t in range(num_steps):
+        if t == 80 or t == 160:
+            mean_value = np.mean(values)
+            values = np.full(4, mean_value)
         curr_alt = (context[t, 2:]).astype(np.int32)
         action_probs = softmax(values[curr_alt], theta[t, 1])
         resp[t] = select_action(curr_alt, action_probs)
