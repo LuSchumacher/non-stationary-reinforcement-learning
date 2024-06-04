@@ -1,11 +1,21 @@
 import numpy as np
-from scipy.stats import halfnorm
+from scipy.stats import halfnorm, uniform
 from keras.utils import to_categorical
 
-GLOBAL_PRIOR_MEAN = halfnorm(0, [0.05, 3]).mean().round(decimals=2)
-GLOBAL_PRIOR_STD = halfnorm(0, [0.05, 3]).std().round(decimals=2)
-LOCAL_PRIOR_MEAN = np.array([0.6, 20])
-LOCAL_PRIOR_STD = np.array([0.3, 20])
+GLOBAL_PRIOR_MEAN = np.concatenate(
+    [
+        halfnorm(0, [0.05, 3]).mean().round(decimals=2),
+        uniform(0, [0.1, 0.1]).mean().round(decimals=2)
+    ]
+)
+GLOBAL_PRIOR_STD = np.concatenate(
+    [
+        halfnorm(0, [0.05, 3]).std().round(decimals=2),
+        uniform(0, [0.1, 0.1]).std().round(decimals=2)
+    ]
+)
+LOCAL_PRIOR_MEAN = np.array([0.5, 37])
+LOCAL_PRIOR_STD = np.array([0.3, 24])
 
 def configure_input(raw_dict):
     """

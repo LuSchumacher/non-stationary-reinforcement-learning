@@ -28,7 +28,7 @@ def sample_theta_0(rng=None):
     tau = np.log(1 + np.exp(tau))
     return np.array([alpha, tau])
 
-def sample_eta(rng=None):
+def sample_rw_eta(rng=None):
     """
     Generates random draws from from prior distributions over the eta parameters.
 
@@ -51,6 +51,28 @@ def sample_eta(rng=None):
         rng = np.random.default_rng()
     eta = rng.normal(loc=0, scale=[0.05, 3])
     return np.abs(eta)
+
+def sample_mrw_eta(rng=None):
+    """Generates random draws from a half-normal prior over the scale and
+    random draws from a uniform prior over the swiching probabilty q of
+    the mixture random walk.
+
+    Parameters:
+    -----------
+
+    rng   : np.random.Generator or None, default: None
+        An optional random number generator to use, if fixing the seed locally.
+    Returns:
+    --------
+    prior_draws : np.array
+        The randomly drawn scale and switching probability parameters.
+    """
+    # Configure RNG, if not provided
+    if rng is None:
+        rng = np.random.default_rng()
+    scales = halfnorm.rvs(loc=0, scale=[0.05, 3])
+    switch_probabilities = rng.uniform(low=0, high=0.1, size=2)
+    return np.concatenate([scales, switch_probabilities])
 
 def sample_random_walk(eta, num_steps=240, lower_bounds=(0, 0), upper_bounds=(1, 80), rng=None):
     """
@@ -95,3 +117,51 @@ def sample_random_walk(eta, num_steps=240, lower_bounds=(0, 0), upper_bounds=(1,
                 theta_t[t - 1] + eta * z[t - 1], lower_bounds, upper_bounds
             )
     return theta_t.astype(np.float32)
+
+def sample_mixture_random_walk(eta, num_steps=240, lower_bounds=(0, 0), upper_bounds=(1, 80), rng=None):
+    """Generates a single simulation from a mixture random walk transition model.
+
+    Parameters:
+    -----------
+    hyper_params : np.array
+        The scales and switching probabilities of the mixture random walk transition.
+    num_steps    : int, optional, default: 240
+        The number of time steps to take for the random walk. Default corresponds
+        to the maximal number of trials in the color discrimination data set.
+    lower_bounds : tuple, optional, default: ``configuration.default_bounds["lower"]``
+        The minimum values the parameters can take.
+    upper_bound  : tuple, optional, default: ``configuration.default_bounds["upper"]``
+        The maximum values the parameters can take.
+    rng          : np.random.Generator or None, default: None
+        An optional random number generator to use, if fixing the seed locally.
+
+    Returns:
+    --------
+    theta_t : np.ndarray of shape (num_steps, num_params)
+        The array of time-varying parameters
+    """
+    if rng is None:
+        rng = np.random.default_rng()
+    theta_t = np.zeros((num_steps, 2))
+    theta_t[0] = sample_theta_0(rng=rng)
+    z = rng.normal(size=(num_steps - 1, 2))
+    stay = 1 - rng.binomial(1, eta[2:], size=(num_steps-1, 2))
+    # transition model
+    for t in range(1, num_steps):
+        # update alpha
+        if stay[t - 1, 0] == 1:
+            theta_t[t, 0] = np.clip(
+                theta_t[t - 1, 0] + eta[0] * z[t - 1, 0],
+                a_min=lower_bounds[0], a_max=upper_bounds[0]
+            )
+        else:
+            theta_t[t, 0] = rng.uniform(lower_bounds[0], upper_bounds[0])
+        # update tau
+        if stay[t - 1, 1]:
+            theta_t[t, 1] = np.clip(
+                theta_t[t - 1, 1] + eta[1] * z[t - 1, 1],
+                a_min=lower_bounds[1], a_max=upper_bounds[1]
+            )
+        else:
+            theta_t[t, 1] = rng.uniform(lower_bounds[1], upper_bounds[1])
+    return theta_t
