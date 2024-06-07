@@ -3,34 +3,21 @@ import pandas as pd
 
 RNG = np.random.default_rng()
 
-DATA = pd.read_csv("../data/data_fontanesi_prep.csv")
-DATA.f_cor = DATA.f_cor / 60
-DATA.f_inc = DATA.f_inc / 60
+DATA = pd.read_csv("../data/data_prepared.csv")
+NUM_SUB = len(np.unique(DATA.id))
 
-RELEVANT_SUB = np.array([1, 3, 5, 6, 7, 8, 16, 20, 22, 23, 24, 26, 27])
-# BLOCKS = np.arange(3)
+MIN_STEPS = 600
+MAX_STEPS = 780
 
-
-def generate_context():
-    """
-    Generate contextual information from a random subject and block.
-
-    Randomly selects a subject from the unique subjects in the data and a block number from a predefined
-    set of blocks. Retrieves the corresponding data for the selected subject and block from the global
-    DATA dataframe, and returns an array containing features 'f_cor', 'f_inc', 'cor_option', and 'inc_option'
-    for the selected subject and block.
-
-    Returns
-    -------
-    np.ndarray
-        A numpy array of shape (80, 4) containing contextual information:
-        - f_cor: Feedback correct option
-        - f_inc: Feedback incorrect option
-        - cor_option: Correct option
-        - inc_option: Incorrect option
-    """
-    sub = RNG.choice(RELEVANT_SUB)
-    # block = RNG.choice(BLOCKS)
-    # sub_data = DATA.loc[(DATA.id == sub) & (DATA.block == block)]
+def generate_context(num_steps):
+    idx = RNG.choice(
+        np.arange(MAX_STEPS), MAX_STEPS - num_steps, replace=False
+    )
+    mask = np.full(MAX_STEPS, 1).astype(bool)
+    mask[idx] = False
+    sub = RNG.choice(np.unique(DATA.id))
     sub_data = DATA.loc[DATA.id == sub]
-    return sub_data[['f_cor', 'f_inc', 'cor_option', 'inc_option']].to_numpy()
+    return sub_data[["stim", "correct_resp", "block", "set_size"]].to_numpy()[mask, :]
+
+def random_num_steps(min_obs=MIN_STEPS, max_obs=MAX_STEPS):
+    return RNG.integers(low=min_obs, high=max_obs + 1)

@@ -1,5 +1,11 @@
 import numpy as np
 from numba import njit
+from scipy.stats import truncnorm
+
+def truncnorm_better(loc=0, scale=1, low=-np.inf, high=np.inf, size=1):
+    return truncnorm.rvs(
+        (low - loc) / scale, (high - loc) / scale, loc=loc, scale=scale, size=size
+    )
 
 @njit
 def softmax(x, tau):

@@ -1,66 +1,40 @@
 import numpy as np
-from scipy.stats import halfnorm, uniform
+from scipy.stats import halfnorm
 from keras.utils import to_categorical
 
-GLOBAL_PRIOR_MEAN = np.concatenate(
-    [
-        halfnorm(0, [0.05, 3]).mean().round(decimals=2),
-        uniform(0, [0.1, 0.1]).mean().round(decimals=2)
-    ]
-)
-GLOBAL_PRIOR_STD = np.concatenate(
-    [
-        halfnorm(0, [0.05, 3]).std().round(decimals=2),
-        uniform(0, [0.1, 0.1]).std().round(decimals=2)
-    ]
-)
-LOCAL_PRIOR_MEAN = np.array([0.5, 37])
-LOCAL_PRIOR_STD = np.array([0.3, 24])
+THETA_PRIOR_MEAN = np.array([0.5, 0.5])
+THETA_PRIOR_STD = np.array([0.3, 0.3])
+ETA_PRIOR_MEAN = np.round(halfnorm(0, 0.05).mean(), decimals=2)
+ETA_PRIOR_STD = np.round(halfnorm(0, 0.05).std(), decimals=2)
+KAPPA_PRIOR_MEAN = np.array([0.5, 4.7])
+KAPPA_PRIOR_STD = np.array([0.3, 1])
 
-def configure_input(raw_dict):
-    """
-    Process raw dictionary data into formatted input for a model.
+def configure_input(forward_dict):
+    out_dict = {}
 
-    This function takes a dictionary containing raw simulation data and prior draws,
-    and formats it into input data suitable for a machine learning model. It extracts simulation
-    data, feedback, and options from the dictionary and encodes them appropriately. It also scales
-    the local and hyper prior draws.
+    data = forward_dict["sim_data"]
+    resp_one_hot = to_categorical(data[:, :, 0])
 
-    Parameters
-    ----------
-    raw_dict : dict
-        A dictionary containing the following keys:
-        - "sim_data": Simulation data.
-        - "sim_batchable_context": Simulation batchable context, including feedback and options.
-        - "local_prior_draws": Local prior draws.
-        - "hyper_prior_draws": Hyper prior draws.
+    context = np.array(forward_dict["batchable_context"])
+    stim_one_hot = to_categorical(context[:, :, 0])
+    correct_resp_one_hot = to_categorical(context[:, :, 1])
+    block = (context[:, :, 2] / 13)[:, :, None]
+    set_size = ((context[:, :, 3] / 3) - 1)[:, :, None]
 
-    Returns
-    -------
-    dict
-        A dictionary containing formatted input data for the model, with the following keys:
-        - "local_parameters": Scaled local prior parameters.
-        - "hyper_parameters": Scaled hyper prior parameters.
-        - "summary_conditions": Encoded and formatted summary conditions for the model.
+    out_dict["summary_conditions"] = np.c_[
+        resp_one_hot, data[:, :, 1:], stim_one_hot,
+        correct_resp_one_hot, block, set_size
+    ].astype(np.float32)
 
-    Notes
-    -----
-    This function assumes that "sim_data", "sim_batchable_context", "local_prior_draws", and
-    "hyper_prior_draws" are present in the raw dictionary.
+    vec_num_obs = forward_dict["non_batchable_context"] * np.ones((data.shape[0], 1))
+    out_dict["direct_conditions"] = np.sqrt(vec_num_obs).astype(np.float32)
 
-    """
-    data = raw_dict.get("sim_data")[:, :, None]
-    feedback = np.array(raw_dict.get("sim_batchable_context"))[:, :, :2]
-    cor_option = np.array(raw_dict.get("sim_batchable_context"))[:, :, 2][:, :, None]
-    inc_option = np.array(raw_dict.get("sim_batchable_context"))[:, :, 3][:, :, None]
-    summary_conditions = np.c_[
-        data, feedback, to_categorical(cor_option), to_categorical(inc_option)
-    ]
-    theta_t = raw_dict.get("local_prior_draws")
-    eta = raw_dict.get("hyper_prior_draws")
-    out_dict = dict(
-        local_parameters=((theta_t - LOCAL_PRIOR_MEAN) / LOCAL_PRIOR_STD).astype(np.float32),
-        hyper_parameters=((eta - GLOBAL_PRIOR_MEAN) / GLOBAL_PRIOR_STD).astype(np.float32),
-        summary_conditions=summary_conditions.astype(np.float32),
-    )
+    theta = forward_dict['local_parameters']
+    eta = forward_dict['global_parameters']
+    kappa = forward_dict['shared_parameters']
+
+    out_dict["local_parameters"] = ((theta - THETA_PRIOR_MEAN) / THETA_PRIOR_STD).astype(np.float32)
+    out_dict["hyper_parameters"] = ((eta - ETA_PRIOR_MEAN) / ETA_PRIOR_STD).astype(np.float32)
+    out_dict["shared_parameters"] = ((kappa - KAPPA_PRIOR_MEAN) / KAPPA_PRIOR_STD).astype(np.float32)
+
     return out_dict
