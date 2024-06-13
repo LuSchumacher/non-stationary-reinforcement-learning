@@ -20,13 +20,18 @@ def sample_kappa():
     return np.concatenate([[phi], c])
 
 @njit
-def sample_random_walk(eta, num_steps, lower_bounds=0, upper_bounds=1):
+def sample_random_walk(eta, context, lower_bounds=0, upper_bounds=1):
+    num_steps = context.shape[0]
     theta_t = np.zeros((num_steps, 2))
     theta_t[0] = sample_theta_0()
     z = np.random.randn(num_steps - 1, 2)
     for t in range(1, num_steps):
-        theta_t[t] = np.maximum(
-            np.minimum(theta_t[t - 1] + eta * z[t - 1], upper_bounds),
-            lower_bounds
-        )
+        if context[t] == context[t -1]:
+            theta_t[t] = np.maximum(
+                np.minimum(theta_t[t - 1] + eta * z[t - 1], upper_bounds),
+                lower_bounds
+            )
+        else:
+            theta_t[t, 0] = np.random.beta(a=1.5, b=2)
+            theta_t[t, 1] = np.random.beta(a=1.5, b=1.5)
     return theta_t.astype(np.float32)

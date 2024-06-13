@@ -58,8 +58,8 @@ def generative_model(batch_size=32):
     for i in range(batch_size):
         eta[i] = sample_eta()
         kappa[i] = sample_kappa()
-        theta[i] = sample_random_walk(eta[i], num_steps)
         context[i] = generate_context(num_steps)
+        theta[i] = sample_random_walk(eta[i], context[i, :, 2])
         sim_data[i] = sample_rlwm(theta[i], kappa[i], context[i])
     sim_dict['global_parameters'] = eta.astype(np.float32)
     sim_dict['shared_parameters'] = kappa.astype(np.float32)
