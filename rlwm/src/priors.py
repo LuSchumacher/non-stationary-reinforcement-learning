@@ -12,11 +12,11 @@ def sample_theta_0():
     return np.array([alpha, p]).astype(np.float32)
 
 def sample_eta():
-    return halfnorm.rvs(loc=0, scale=0.05, size=2)
+    return halfnorm.rvs(loc=0, scale=0.02, size=2)
 
 def sample_kappa():
     phi = RNG.uniform(low=0, high=1)
-    c = truncnorm_better(loc=7, scale=2, low=0, high=6)
+    c = truncnorm_better(loc=7, scale=1, low=0, high=6)
     return np.concatenate([[phi], c])
 
 @njit

@@ -16,15 +16,17 @@ df <- read_csv("../data/TortoiseAndHareData.csv") %>%
     set_size = ns,
     correct_resp = corchoice,
     resp = choice,
-    correct = cor
+    correct = cor,
+    iteration = iter
   ) %>% 
-  select(-iter, -pcor, -delay, -phase) %>% 
+  select(-pcor, -delay, -phase) %>% 
   mutate(
     id = dense_rank(id),
-    block = block - 1,
+    block = block,
     stim = stim -1,
     resp = resp - 1,
-    correct_resp = correct_resp -1
+    correct_resp = correct_resp -1,
+    reward = ifelse(correct == 1, 1, 0)
   )
 
 summary <- df %>% 
@@ -35,3 +37,9 @@ summary <- df %>%
   )
 
 write_csv(df, "data_prepared.csv")
+
+person_data <- df %>% 
+  filter(id == 1)
+
+
+
