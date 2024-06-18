@@ -108,10 +108,7 @@ def sample_random_walk(eta, num_steps=240, lower_bounds=(0, 0), upper_bounds=(1,
     z = rng.normal(size=(num_steps - 1, 2))
     for t in range(1, num_steps):
         if t == 80 or t == 160:
-            theta_t[t, 0] = rng.uniform(theta_t[t - 1, 0], 1)
-            theta_t[t, 1] = np.clip(
-            theta_t[t - 1, 1] + eta[1] * z[t - 1, 1], lower_bounds[1], upper_bounds[1]
-            )
+            theta_t[t] = sample_theta_0(rng=rng)
         else:
             theta_t[t] = np.clip(
                 theta_t[t - 1] + eta * z[t - 1], lower_bounds, upper_bounds
