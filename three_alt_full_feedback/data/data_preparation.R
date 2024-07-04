@@ -6,11 +6,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 df <- read_csv("empiric_data.csv")
 
 summary <- df %>% 
-  group_by(condition) %>% 
-  summarise(N = n())
-
-
-summary <- df %>% 
+  filter(participant == 1) %>% 
   group_by(condition) %>% 
   summarise(
     mean_low = mean(low_opt_feed),
@@ -27,3 +23,7 @@ summary <- df %>%
 
 x = round(rnorm(2093, 42, 5))
 sd(x)
+
+summary <- df %>% 
+  group_by(participant) %>% 
+  summarise(N = n())
