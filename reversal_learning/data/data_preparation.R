@@ -14,9 +14,10 @@ df <- dat %>%
     p_b = p_win_correct,
     p_a = p_win_incorrect,
     choice = choiceIsHighP,
+    trial_n_reversal = trialNreversal
   ) %>% 
   select(
-    id, block, trial, reversal, stim_set,
+    id, block, trial, trial_n_reversal, reversal, stim_set,
     p_a, p_b, choice, reward
   )
 
@@ -31,7 +32,9 @@ df$p_a[df$reversal == 1] <- df$p_b_tmp[df$reversal == 1]
 df$p_b[df$reversal == 0] <- df$p_b_tmp[df$reversal == 0]
 df$p_b[df$reversal == 1] <- df$p_a_tmp[df$reversal == 1]
 
+df$choice[df$reversal == 1] = 1 - df$choice[df$reversal == 1]
+
 df <- df %>% 
   select(-p_a_tmp, -p_b_tmp)
-
+  
 write_csv(df, 'data_prepared.csv')
